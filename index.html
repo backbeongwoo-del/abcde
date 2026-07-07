@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YummyLog - 나만의 맛집 탐방기</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts (Noto Sans KR, Playfair Display) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+        .serif-title {
+            font-family: 'Playfair Display', 'Noto Sans KR', serif;
+        }
+        /* Custom scrollbar for a cleaner look */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="bg-stone-50 text-stone-800 min-h-screen flex flex-col">
+
+    <!-- HEADER -->
+    <header class="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-stone-200">
+        <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+            <a href="#" onclick="resetFilters()" class="flex items-center gap-2">
+                <span class="text-2xl text-amber-600"><i class="fa-solid fa-utensils"></i></span>
+                <span class="serif-title text-2xl font-bold tracking-tight text-stone-900">Yummy<span class="text-amber-500">Log</span></span>
+            </a>
+            
+            <nav class="hidden md:flex items-center gap-8 text-sm font-medium text-stone-600">
+                <a href="#" onclick="resetFilters()" class="hover:text-amber-600 transition-colors">홈 (전체보기)</a>
+                <a href="#" onclick="filterCategory('한식')" class="hover:text-amber-600 transition-colors">한식</a>
+                <a href="#" onclick="filterCategory('양식')" class="hover:text-amber-600 transition-colors">양식/일식/기타</a>
+                <a href="#" onclick="filterCategory('카페')" class="hover:text-amber-600 transition-colors">카페/디저트</a>
+            </nav>
+
+            <button onclick="openModal('addModal')" class="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-full text-sm font-medium transition-all shadow-md shadow-amber-600/10 flex items-center gap-1">
+                <i class="fa-solid fa-plus text-xs"></i> 맛집 추가
+            </button>
+        </div>
+    </header>
+
+    <!-- HERO BANNER -->
+    <section class="relative bg-stone-900 text-white py-20 px-4 overflow-hidden">
+        <div class="absolute inset-0 opacity-40 bg-[url('https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1200&q=80')] bg-cover bg-center"></div>
+        <div class="absolute inset-0 bg-gradient-to-t from-stone-900 via-stone-900/60 to-transparent"></div>
+        
+        <div class="relative max-w-4xl mx-auto text-center space-y-4">
+            <span class="text-amber-400 font-semibold tracking-wider text-sm uppercase">My Personal Gourmet Archive</span>
+            <h1 class="serif-title text-4xl md:text-5xl font-bold tracking-tight">지극히 개인적이고 솔직한<br class="md:hidden"> 미식의 기록</h1>
+            <p class="text-stone-300 max-w-lg mx-auto text-sm md:text-base font-light">
+                광고 없는 백퍼센트 내돈내산 맛집 탐방기. 제가 직접 가보고 감동했거나 혹은 아쉬웠던 공간들을 솔직하게 기록합니다.
+            </p>
+            
+            <!-- SEARCH BAR -->
+            <div class="pt-4 max-w-md mx-auto">
+                <div class="bg-white rounded-full p-1 flex items-center shadow-lg">
+                    <span class="pl-4 text-stone-400"><i class="fa-solid fa-magnifying-glass"></i></span>
+                    <input type="text" id="searchInput" oninput="searchRestaurants()" placeholder="맛집 이름, 지역, 메뉴 검색..." class="w-full px-3 py-2 text-stone-800 placeholder-stone-400 bg-transparent outline-none text-sm">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-grow max-w-6xl w-full mx-auto px-4 py-12">
+        
+        <!-- CATEGORY & STATS BAR -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-8 border-b border-stone-200 mb-8">
+            <!-- Categories -->
+            <div class="flex flex-wrap gap-2" id="categoryButtons">
+                <button onclick="filterCategory('all')" id="btn-all" class="category-btn px-4 py-1.5 rounded-full text-sm font-medium transition-all bg-amber-600 text-white">전체</button>
+                <button onclick="filterCategory('한식')" id="btn-한식" class="category-btn px-4 py-1.5 rounded-full text-sm font-medium transition-all bg-white text-stone-600 border border-stone-200 hover:border-stone-300">한식 🇰🇷</button>
+                <button onclick="filterCategory('일식')" id="btn-일식" class="category-btn px-4 py-1.5 rounded-full text-sm font-medium transition-all bg-white text-stone-600 border border-stone-200 hover:border-stone-300">일식 🇯🇵</button>
+                <button onclick="filterCategory('중식')" id="btn-중식" class="category-btn px-4 py-1.5 rounded-full text-sm font-medium transition-all bg-white text-stone-600 border border-stone-200 hover:border-stone-300">중식 🇨🇳</button>
+                <button onclick="filterCategory('양식')" id="btn-양식" class="category-btn px-4 py-1.5 rounded-full text-sm font-medium transition-all bg-white text-stone-600 border border-stone-200 hover:border-stone-300">양식 🍕</button>
+                <button onclick="filterCategory('카페')" id="btn-카페" class="category-btn px-4 py-1.5 rounded-full text-sm font-medium transition-all bg-white text-stone-600 border border-stone-200 hover:border-stone-300">카페/디저트 ☕</button>
+                <button onclick="filterCategory('기타')" id="btn-기타" class="category-btn px-4 py-1.5 rounded-full text-sm font-medium transition-all bg-white text-stone-600 border border-stone-200 hover:border-stone-300">기타 🌮</button>
+            </div>
+
+            <!-- Stats -->
+            <div class="text-sm text-stone-500 font-medium">
+                등록된 맛집: <span id="restaurantCount" class="text-amber-600 font-bold">0</span>개
+            </div>
+        </div>
+
+        <!-- RESTAURANT GRID -->
+        <div id="restaurantGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- Dynamic Content -->
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="hidden text-center py-20">
+            <span class="text-5xl text-stone-300 block mb-4"><i class="fa-regular fa-folder-open"></i></span>
+            <h3 class="text-lg font-semibold text-stone-600">등록된 맛집이 없습니다.</h3>
+            <p class="text-stone-400 text-sm mt-1">상단의 '+ 맛집 추가' 버튼을 눌러 첫 번째 기록을 남겨보세요!</p>
+        </div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-stone-900 text-stone-400 py-12 mt-auto border-t border-stone-800">
+        <div class="max-w-6xl mx-auto px-4 text-center space-y-4">
+            <div class="serif-title text-xl font-bold text-white tracking-tight">Yummy<span class="text-amber-500">Log</span></div>
+            <p class="text-xs max-w-md mx-auto text-stone-500">
+                본 사이트에 작성된 모든 후기는 주관적이고 개인적인 입맛을 기준으로 작성되었습니다. 맛집 추천이나 제보, 협업 등은 이메일로 연락주세요.
+            </p>
+            <div class="flex justify-center gap-4 text-stone-500 text-lg">
+                <a href="#" class="hover:text-white transition-colors"><i class="fa-brands fa-instagram"></i></a>
+                <a href="#" class="hover:text-white transition-colors"><i class="fa-brands fa-youtube"></i></a>
+                <a href="#" class="hover:text-white transition-colors"><i class="fa-regular fa-envelope"></i></a>
+            </div>
+            <p class="text-[11px] text-stone-600">&copy; 2026 YummyLog. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- ADD RESTAURANT MODAL -->
+    <div id="addModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+            <div class="p-6 border-b border-stone-100 flex items-center justify-between sticky top-0 bg-white z-10">
+                <h3 class="text-lg font-bold text-stone-900"><i class="fa-solid fa-utensils text-amber-500 mr-2"></i>새로운 맛집 기록하기</h3>
+                <button onclick="closeModal('addModal')" class="text-stone-400 hover:text-stone-600 transition-colors text-xl"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <form id="addForm" onsubmit="handleSubmit(event)" class="p-6 space-y-4">
+                <!-- Name -->
+                <div>
+                    <label class="block text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1">식당명 *</label>
+                    <input type="text" id="formName" required placeholder="예: 삼청동 수제비" class="w-full px-3 py-2 border border-stone-200 rounded-lg text-sm focus:outline-none focus:border-amber-500">
+                </div>
+
+                <!-- Category & Rating -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1">카테고리 *</label>
+                        <select id="formCategory" required class="w-full px-3 py-2 border border-stone-200 rounded-lg text-sm focus:outline-none focus:border-amber-500 bg-white">
+                            <option value="한식">한식 🇰🇷</option>
+                            <option value="일식">일식 🇯🇵</option>
+                            <option value="중식">중식 🇨🇳</option>
+                            <option value="양식">양식 🍕</option>
+                            <option value="카페">카페/디저트 ☕</option>
+                            <option value="기타">기타 🌮</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1">나의 평점 *</label>
+                        <select id="formRating" required class="w-full px-3 py-2 border border-stone-200 rounded-lg text-sm focus:outline-none focus:border-amber-500 bg-white text-amber-500 font-bold">
+                            <option value="5">★★★★★ (인생맛집)</option>
+                            <option value="4">★★★★☆ (매우추천)</option>
+                            <option value="3">★★★☆☆ (무난해요)</option>
+                            <option value="2">★★☆☆☆ (아쉬워요)</option>
+                            <option value="1">★☆☆☆☆ (실망이에요)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Location & Menu -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1">위치/지역</label>
+                        <input type="text" id="formLocation" placeholder="예: 서울 종로구 삼청동" class="w-full px-3 py-2 border border-stone-200 rounded-lg text-sm focus:outline-none focus:border-amber-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1">추천 메뉴</label>
+                        <input type="text" id="formMenu" placeholder="예: 수제비, 감자전" class="w-full px-3 py-2 border border-stone-200 rounded-lg text-sm focus:outline-none focus:border-amber-500">
+                    </div>
+                </div>
+
+                <!-- Image URL -->
+                <div>
+                    <label class="block text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1">대표 이미지 URL</label>
+                    <input type="url" id="formImage" placeholder="https://images.unsplash.com/... (비워두면 기본 이미지 지정)" class="w-full px-3 py-2 border border-stone-200 rounded-lg text-sm focus:outline-none focus:border-amber-500">
+                    <p class="text-[11px] text-stone-400 mt-1">Unsplash 등 웹상의 이미지 링크를 넣거나 비워두면 어울리는 플레이스홀더를 제공합니다.</p>
+                </div>
+
+                <!-- Summary (One liner) -->
+                <div>
+                    <label class="block text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1">한줄평 *</label>
+                    <input type="text" id="formSummary" required placeholder="예: 얇고 쫄깃한 수제비 반죽과 시원하고 깊은 멸치 육수의 환상적 조화" class="w-full px-3 py-2 border border-stone-200 rounded-lg text-sm focus:outline-none focus:border-amber-500">
+                </div>
+
+                <!-- Detail Review -->
+                <div>
+                    <label class="block text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1">상세 후기</label>
+                    <textarea id="formReview" rows="4" placeholder="맛, 분위기, 웨이팅 정보, 주차 정보 등을 자유롭게 기록해보세요." class="w-full px-3 py-2 border border-stone-200 rounded-lg text-sm focus:outline-none focus:border-amber-500"></textarea>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex items-center justify-end gap-3 pt-4 border-t border-stone-100">
+                    <button type="button" onclick="closeModal('addModal')" class="px-4 py-2 text-stone-500 hover:bg-stone-50 rounded-lg text-sm font-medium transition-colors">취소</button>
+                    <button type="submit" class="px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm font-medium transition-colors shadow-sm">기록 저장</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- DETAIL VIEW MODAL -->
+    <div id="detailModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl animate-in fade-in zoom-in-95 duration-200" id="detailContent">
+            <!-- Dynamic Content -->
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT FOR DYNAMIC BEHAVIORS -->
+    <script>
+        // MOCK INITIAL DATA
+        let restaurants = [
+            {
+                id: 1,
+                name: "난포 성수점",
+                category: "한식",
+                rating: 5,
+                location: "서울 성동구 성수동",
+                menu: "강된장쌈밥, 제나라구이",
+                summary: "눈과 입이 모두 즐거워지는 정갈한 퓨전 한식의 정석",
+                review: "외관부터 감성이 넘치는 퓨전 한식 맛집입니다. 가장 유명한 강된장쌈밥은 한 입 크기의 귀여운 케일 쌈밥 아래 짭조름한 강된장이 가득 깔려있어 자극적이지 않으면서도 감칠맛이 폭발합니다. 제나라구이 역시 야들야들하게 잘 구워진 고기와 파채의 조합이 환상적이었어요. 웨이팅이 조금 긴 편이라 오픈런이나 테이블링 앱 예약을 적극 추천합니다.",
+                image: "https://images.unsplash.com/photo-1616147133957-c86e0c039757?auto=format&fit=crop&w=600&q=80"
+            },
+            {
+                id: 2,
+                name: "멘텐 (Menten)",
+                category: "일식",
+                rating: 4,
+                location: "서울 중구 충무로",
+                menu: "쇼유라멘, 토리빠이탄",
+                summary: "정교하고 깊은 닭 육수 베이스의 미쉐린 가이드 라멘 맛집",
+                review: "충무로 골목에 위치한 1인 셰프의 라멘집입니다. 내부는 깔끔한 바 테이블 형식으로 되어 있으며, 육수의 깊이가 상상을 초월합니다. 쇼유라멘은 맑고 깨끗하지만 묵직한 간장 베이스가 일품이고, 닭 차슈는 입 안에서 사르르 녹아내리는 듯 부드럽습니다. 정교하게 올라간 아지타마고(맛달걀)의 익힘 수준마저 완벽합니다.",
+                image: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=600&q=80"
+            },
+            {
+                id: 3,
+                name: "에르제 성수 (Herge)",
+                category: "카페",
+                rating: 5,
+                location: "서울 성동구 성수동",
+                menu: "크로플, 잠봉뵈르",
+                summary: "파리의 빈티지 베이커리를 그대로 옮겨놓은 듯한 빵지순례 필수 코스",
+                review: "유럽 감성이 가득 느껴지는 인테리어와 압도적인 버터 향에 홀리는 베이커리 카페입니다. 시그니처인 잠봉뵈르는 고소하고 바삭한 바게트와 짭조름한 잠봉, 도톰하고 풍미 깊은 버터의 밸런스가 정말 훌륭합니다. 크루아상도 결이 하나하나 살아있어서 포장해와도 바삭함을 오래 유지하네요. 성수에 간다면 무조건 들려야 할 곳 중 하나입니다.",
+                image: "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=600&q=80"
+            },
+            {
+                id: 4,
+                name: "진진 (Jin Jin)",
+                category: "중식",
+                rating: 4,
+                location: "서울 마포구 서교동",
+                menu: "멘보샤, 대게살삭스핀",
+                summary: "바삭함의 끝판왕 멘보샤와 정통 중식을 가성비 좋게 만나는 곳",
+                review: "회원가로 먹으면 훨씬 가성비 좋게 고급 요리를 즐길 수 있는 코리안 차이니즈 레스토랑의 명가입니다. 이곳의 멘보샤는 식빵은 기름을 거의 머금지 않아 극강으로 바삭하고, 안을 채운 다진 새우는 촉촉하고 탱글탱글합니다. 마파두부도 산초 향이 톡 쏘면서 현지의 맛을 제대로 구현했습니다.",
+                image: "https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&w=600&q=80"
+            }
+        ];
+
+        let currentCategory = 'all';
+        let searchQuery = '';
+
+        // CATEGORY IMAGES DICTIONARY (For default images if none provided)
+        const defaultImages = {
+            "한식": "https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?auto=format&fit=crop&w=600&q=80",
+            "일식": "https://images.unsplash.com/photo-1553621042-f6e147245754?auto=format&fit=crop&w=600&q=80",
+            "중식": "https://images.unsplash.com/photo-1525755662778-989d0524087e?auto=format&fit=crop&w=600&q=80",
+            "양식": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80",
+            "카페": "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=600&q=80",
+            "기타": "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=600&q=80"
+        };
+
+        // RENDER RESTAURANTS
+        function render() {
+            const grid = document.getElementById('restaurantGrid');
+            const empty = document.getElementById('emptyState');
+            
+            // Filter by category AND search query
+            const filtered = restaurants.filter(item => {
+                const matchesCategory = currentCategory === 'all' || item.category === currentCategory;
+                const matchesSearch = searchQuery === '' || 
+                    item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    item.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    item.menu.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    item.summary.toLowerCase().includes(searchQuery.toLowerCase());
+                return matchesCategory && matchesSearch;
+            });
+
+            // Update stats
+            document.getElementById('restaurantCount').innerText = filtered.length;
+
+            if (filtered.length === 0) {
+                grid.innerHTML = '';
+                empty.classList.remove('hidden');
+                return;
+            } else {
+                empty.classList.add('hidden');
+            }
+
+            grid.innerHTML = filtered.map(item => {
+                const stars = '★'.repeat(item.rating) + '☆'.repeat(5 - item.rating);
+                const imgUrl = item.image ? item.image : (defaultImages[item.category] || defaultImages['기타']);
+                
+                return `
+                    <div class="bg-white rounded-2xl overflow-hidden border border-stone-200/60 shadow-sm hover:shadow-xl transition-all duration-300 group flex flex-col cursor-pointer" onclick="viewDetail(${item.id})">
+                        <!-- Image wrapper -->
+                        <div class="relative h-56 overflow-hidden bg-stone-100">
+                            <img src="${imgUrl}" alt="${item.name}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onerror="this.src='${defaultImages['기타']}'">
+                            <span class="absolute top-4 left-4 bg-white/90 backdrop-blur-md text-stone-800 text-[11px] font-bold px-2.5 py-1 rounded-full border border-stone-100 shadow-sm">${item.category}</span>
+                            <span class="absolute bottom-4 right-4 bg-stone-900/80 backdrop-blur-md text-amber-400 text-xs font-bold px-3 py-1 rounded-full shadow-sm">
+                                ${stars}
+                            </span>
+                        </div>
+                        <!-- Info -->
+                        <div class="p-6 flex flex-col flex-grow space-y-3">
+                            <div class="space-y-1">
+                                <span class="text-xs text-stone-400 flex items-center gap-1">
+                                    <i class="fa-solid fa-location-dot"></i> ${item.location || '위치 미지정'}
+                                </span>
+                                <h3 class="text-lg font-bold text-stone-900 group-hover:text-amber-600 transition-colors">${item.name}</h3>
+                            </div>
+                            <p class="text-stone-600 text-sm line-clamp-2 font-light leading-relaxed flex-grow">${item.summary}</p>
+                            <div class="pt-3 border-t border-stone-100 flex items-center justify-between text-xs text-stone-500">
+                                <span class="truncate max-w-[180px]">추천: <strong class="text-stone-700 font-medium">${item.menu || '기본메뉴'}</strong></span>
+                                <span class="text-amber-600 font-semibold group-hover:translate-x-1 transition-transform">더 보기 <i class="fa-solid fa-arrow-right text-[10px]"></i></span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // FILTER ACTIONS
+        function filterCategory(category) {
+            currentCategory = category;
+            
+            // Style active button
+            const buttons = document.querySelectorAll('.category-btn');
+            buttons.forEach(btn => {
+                btn.classList.remove('bg-amber-600', 'text-white');
+                btn.classList.add('bg-white', 'text-stone-600', 'border', 'border-stone-200');
+            });
+
+            const activeBtn = document.getElementById(`btn-${category}`);
+            if (activeBtn) {
+                activeBtn.classList.remove('bg-white', 'text-stone-600', 'border', 'border-stone-200');
+                activeBtn.classList.add('bg-amber-600', 'text-white');
+            }
+
+            render();
+        }
+
+        function resetFilters() {
+            document.getElementById('searchInput').value = '';
+            searchQuery = '';
+            filterCategory('all');
+        }
+
+        function searchRestaurants() {
+            searchQuery = document.getElementById('searchInput').value;
+            render();
+        }
+
+        // VIEW DETAIL MODAL
+        function viewDetail(id) {
+            const item = restaurants.find(r => r.id === id);
+            if (!item) return;
+
+            const stars = '★'.repeat(item.rating) + '☆'.repeat(5 - item.rating);
+            const imgUrl = item.image ? item.image : (defaultImages[item.category] || defaultImages['기타']);
+
+            const content = document.getElementById('detailContent');
+            content.innerHTML = `
+                <!-- Image Header -->
+                <div class="relative h-72 md:h-96 bg-stone-100">
+                    <img src="${imgUrl}" alt="${item.name}" class="w-full h-full object-cover">
+                    <div class="absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-900/25 to-transparent"></div>
+                    <button onclick="closeModal('detailModal')" class="absolute top-4 right-4 bg-black/40 hover:bg-black/60 text-white rounded-full w-8 h-8 flex items-center justify-center transition-colors">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                    
+                    <div class="absolute bottom-6 left-6 right-6 text-white space-y-2">
+                        <div class="flex items-center gap-2">
+                            <span class="bg-amber-500 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase">${item.category}</span>
+                            <span class="text-amber-400 text-sm tracking-widest">${stars}</span>
+                        </div>
+                        <h2 class="text-2xl md:text-3xl font-extrabold tracking-tight">${item.name}</h2>
+                    </div>
+                </div>
+
+                <!-- Info Body -->
+                <div class="p-6 md:p-8 space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 bg-stone-50 p-4 rounded-xl border border-stone-100">
+                        <div class="space-y-1">
+                            <span class="text-[11px] text-stone-400 font-semibold block uppercase">위치</span>
+                            <span class="text-stone-700 text-sm font-medium flex items-center gap-1">
+                                <i class="fa-solid fa-map-location-dot text-stone-400"></i> ${item.location || '미기재'}
+                            </span>
+                        </div>
+                        <div class="space-y-1">
+                            <span class="text-[11px] text-stone-400 font-semibold block uppercase">추천 메뉴</span>
+                            <span class="text-stone-700 text-sm font-medium flex items-center gap-1">
+                                <i class="fa-solid fa-utensils text-stone-400"></i> ${item.menu || '미기재'}
+                            </span>
+                        </div>
+                        <div class="space-y-1">
+                            <span class="text-[11px] text-stone-400 font-semibold block uppercase">내 맛집 점수</span>
+                            <span class="text-amber-600 text-sm font-bold flex items-center gap-1">
+                                <i class="fa-solid fa-star text-amber-500"></i> ${item.rating}.0 / 5.0
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div class="space-y-2">
+                            <span class="text-xs text-amber-600 font-semibold uppercase tracking-wider block">한줄평</span>
+                            <blockquote class="border-l-4 border-amber-500 pl-4 text-stone-800 text-lg font-medium leading-relaxed italic">
+                                "${item.summary}"
+                            </blockquote>
+                        </div>
+
+                        <div class="space-y-2 pt-2">
+                            <span class="text-xs text-stone-400 font-semibold uppercase tracking-wider block">상세 후기</span>
+                            <p class="text-stone-600 text-sm leading-relaxed whitespace-pre-wrap font-light">${item.review || '상세 후기가 아직 등록되지 않았습니다.'}</p>
+                        </div>
+                    </div>
+
+                    <!-- Footer Action in Detail -->
+                    <div class="pt-6 border-t border-stone-100 flex items-center justify-between">
+                        <button onclick="deleteRestaurant(${item.id})" class="text-red-500 hover:text-red-600 text-xs font-semibold flex items-center gap-1 py-2 px-3 rounded-lg hover:bg-red-50 transition-colors">
+                            <i class="fa-regular fa-trash-can"></i> 이 기록 삭제하기
+                        </button>
+                        <button onclick="closeModal('detailModal')" class="bg-stone-900 hover:bg-stone-800 text-white text-xs font-semibold py-2 px-4 rounded-lg transition-colors">
+                            닫기
+                        </button>
+                    </div>
+                </div>
+            `;
+            openModal('detailModal');
+        }
+
+        // DELETE ACTION
+        function deleteRestaurant(id) {
+            if (confirm("이 맛집 기록을 정말 삭제하시겠습니까?")) {
+                restaurants = restaurants.filter(r => r.id !== id);
+                closeModal('detailModal');
+                render();
+            }
+        }
+
+        // FORM SUBMISSION
+        function handleSubmit(event) {
+            event.preventDefault();
+
+            const name = document.getElementById('formName').value;
+            const category = document.getElementById('formCategory').value;
+            const rating = parseInt(document.getElementById('formRating').value);
+            const location = document.getElementById('formLocation').value;
+            const menu = document.getElementById('formMenu').value;
+            const image = document.getElementById('formImage').value;
+            const summary = document.getElementById('formSummary').value;
+            const review = document.getElementById('formReview').value;
+
+            const newRestaurant = {
+                id: Date.now(), // Unique ID using timestamp
+                name,
+                category,
+                rating,
+                location,
+                menu,
+                summary,
+                review,
+                image: image || null
+            };
+
+            restaurants.unshift(newRestaurant); // Add to the top of list
+            
+            // Reset and close
+            document.getElementById('addForm').reset();
+            closeModal('addModal');
+            
+            // Rerender with current category as 'all' to show new entry
+            resetFilters();
+        }
+
+        // MODAL UTILS
+        function openModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden'; // Stop scrolling behind
+        }
+
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.add('hidden');
+            document.body.style.overflow = 'unset'; // Restore scrolling
+        }
+
+        // Close on background click
+        window.onclick = function(event) {
+            const addModal = document.getElementById('addModal');
+            const detailModal = document.getElementById('detailModal');
+            if (event.target === addModal) {
+                closeModal('addModal');
+            }
+            if (event.target === detailModal) {
+                closeModal('detailModal');
+            }
+        }
+
+        // INITIAL LOAD
+        window.onload = function() {
+            render();
+        }
+    </script>
+</body>
+</html>
